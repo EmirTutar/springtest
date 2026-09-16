@@ -11,64 +11,49 @@ import db.Database;
 
 /**
  * Gibt nacheinander zwei Kundenlisten (Name, Adresse) aus:
- * Liste 1 wird per SQL bereits sortiert von der Datenbank geholt,
- * Liste 2 wird unsortiert geholt und anschließend mit Java sortiert.
- *
- * Tabellen- und Spaltennamen müssen ggf. an das tatsächliche
- * Schema der Testdatenbank angepasst werden.
+ * Liste 1 kommt bereits sortiert aus der Datenbank (ORDER BY),
+ * Liste 2 kommt unsortiert und wird mit Java sortiert.
  */
 public class Main {
 
-    private static final String TABELLE = "KUNDE";
-    private static final String SPALTE_NAME = "NAME";
-    private static final String SPALTE_ADRESSE = "ADRESSE";
+    private static final String SQL_BASE =
+            "SELECT p.NAME, p.VORNAME, a.STRASSE, a.PLZ, a.ORT "
+                    + "FROM PERSON p JOIN ADRESSE a ON p.PERSON_ID = a.PERSON_ID";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         Database db = new Database();
+        db.open();
 
-        try {
-            db.open();
+        System.out.println("Liste 1: von der Datenbank sortiert");
+        ausgeben(abfragen(db, SQL_BASE + " ORDER BY p.NAME"));
 
-            System.out.println("Liste 1: von der Datenbank sortiert (ORDER BY " + SPALTE_NAME + ")");
-            System.out.println("------------------------------------------------------------");
-            String sqlSortiert = "SELECT " + SPALTE_NAME + ", " + SPALTE_ADRESSE
-                    + " FROM " + TABELLE + " ORDER BY " + SPALTE_NAME;
-            List<Kunde> liste1 = ladeKunden(db, sqlSortiert);
-            gibKundenlisteAus(liste1);
+        System.out.println("\nListe 2: unsortiert geholt, mit Java sortiert");
+        List<String[]> liste2 = abfragen(db, SQL_BASE);
+        liste2.sort(Comparator.comparing(zeile -> zeile[0]));
+        ausgeben(liste2);
 
-            System.out.println();
-            System.out.println("Liste 2: unsortiert von der Datenbank, mit Java sortiert");
-            System.out.println("------------------------------------------------------------");
-            String sqlUnsortiert = "SELECT " + SPALTE_NAME + ", " + SPALTE_ADRESSE + " FROM " + TABELLE;
-            List<Kunde> liste2 = ladeKunden(db, sqlUnsortiert);
-            liste2.sort(Comparator.comparing(Kunde::getName));
-            gibKundenlisteAus(liste2);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            db.close();
-        }
+        db.close();
     }
 
-    private static List<Kunde> ladeKunden(Database db, String sql) throws SQLException {
-        List<Kunde> kunden = new ArrayList<>();
+    private static List<String[]> abfragen(Database db, String sql) throws SQLException {
+        List<String[]> kunden = new ArrayList<>();
 
         try (PreparedStatement stmt = db.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                kunden.add(new Kunde(rs.getString(SPALTE_NAME), rs.getString(SPALTE_ADRESSE)));
+                String name = rs.getString("NAME") + ", " + rs.getString("VORNAME");
+                String adresse = rs.getString("STRASSE") + ", " + rs.getString("PLZ") + " " + rs.getString("ORT");
+                kunden.add(new String[] { name, adresse });
             }
         }
 
         return kunden;
     }
 
-    private static void gibKundenlisteAus(List<Kunde> kunden) {
-        System.out.printf("%-30s %-40s%n", "Name", "Adresse");
-        for (Kunde kunde : kunden) {
-            System.out.printf("%-30s %-40s%n", kunde.getName(), kunde.getAdresse());
+    private static void ausgeben(List<String[]> kunden) {
+        for (String[] kunde : kunden) {
+            System.out.printf("%-30s %s%n", kunde[0], kunde[1]);
         }
     }
 }

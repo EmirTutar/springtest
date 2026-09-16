@@ -13,19 +13,17 @@ aus der Testdatenbank.
 - `src/main/java/db/Database.java` – gegebene Klasse zur Kommunikation mit
   der Oracle-Testdatenbank (Verbindung öffnen/schließen, Prozeduren/Funktionen
   ausführen, `PreparedStatement` erzeugen).
-- `src/main/java/app/Kunde.java` – einfache Datenklasse für Name + Adresse.
 - `src/main/java/app/Main.java` – Hauptprogramm mit den beiden Kundenlisten.
+  Verknüpft `PERSON` (NAME, VORNAME) und `ADRESSE` (STRASSE, PLZ, ORT) über
+  `PERSON_ID`.
+- `src/main/java/app/SchemaExplorer.java` – Hilfsprogramm zum Erkunden von
+  Tabellen-/Spaltennamen der Testdatenbank (nicht Teil der eigentlichen
+  Aufgabe).
 
 ## Anpassungen vor dem Ausführen
 
-Da mir der Zugriff auf die reale Testdatenbank fehlt, bitte vor der Ausführung
-anpassen:
-
-1. In `Database.java`: `username`, `password` und `verbinder` (JDBC-URL) mit
-   den echten Zugangsdaten der Testdatenbank ersetzen.
-2. In `Main.java`: `TABELLE`, `SPALTE_NAME` und `SPALTE_ADRESSE` an das
-   tatsächliche Tabellen-/Spaltenschema der Kunden-Tabelle anpassen, falls es
-   von `KUNDE` / `NAME` / `ADRESSE` abweicht.
+In `Database.java`: `username`, `password` und `verbinder` (JDBC-URL) mit den
+echten Zugangsdaten der Testdatenbank ersetzen.
 
 ## Bauen
 
